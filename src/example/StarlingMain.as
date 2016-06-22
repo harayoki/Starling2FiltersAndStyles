@@ -3,6 +3,9 @@ package example {
 	import flash.display3D.Context3DProfile;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.utils.clearInterval;
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
 
 	import harayoki.starling2.filters.PosterizationFilter;
 
@@ -66,18 +69,38 @@ package example {
 			var center:Quad = _createQuad(240+20, 240+20, "NORMAL");
 
 			var posterizationFilter:PosterizationFilter = new PosterizationFilter(8,8,8,8);
-			var topleft:Quad = _createQuad(10, 10, "POSTERIZATION\nFILTER", function(movePoint:Point){
-				if(movePoint.x > 0) {
-					posterizationFilter.redDiv = 1 + (posterizationFilter.redDiv % 10);
-					posterizationFilter.blueDiv = -1 + (posterizationFilter.blueDiv % 10);
-				} else if(movePoint.x < 0) {
-					posterizationFilter.redDiv = -1 + (posterizationFilter.redDiv % 10);
-					posterizationFilter.blueDiv = 1 + (posterizationFilter.blueDiv % 10);
+			var touchCnt:uint = 0;
+			var topleft:Quad = _createQuad(10, 10, "POSTERIZATION\nFILTER", function(touchPoint:Point, cnt:uint):void{
+				touchCnt = cnt;
+			},function(movePoint:Point){
+				var cnt:uint = touchCnt % 3;
+				if(movePoint.x != 0) {
+					var dx:int = movePoint.x > 0 ? 1 : -1;
+					var dy:int = movePoint.y > 0 ? 1 : -1;
+					switch (cnt) {
+						case 0:
+							posterizationFilter.redDiv = (posterizationFilter.redDiv + dx) % 12;
+							break;
+						case 1:
+							posterizationFilter.greenDiv = (posterizationFilter.greenDiv + dx) % 12;
+							break;
+						case 2:
+							posterizationFilter.blueDiv = (posterizationFilter.blueDiv + dx) % 12;
+							break;
+					}
 				}
-				if(movePoint.y > 0) {
-					posterizationFilter.greenDiv = 1 + (posterizationFilter.greenDiv % 10);
-				} else if(movePoint.y < 0) {
-					posterizationFilter.greenDiv = -1 + (posterizationFilter.greenDiv % 10);
+				if(movePoint.y != 0) {
+					switch (cnt) {
+						case 0:
+							posterizationFilter.blueDiv = (posterizationFilter.blueDiv + dy) % 12;
+							break;
+						case 1:
+							posterizationFilter.redDiv = (posterizationFilter.redDiv + dy) % 12;
+							break;
+						case 2:
+							posterizationFilter.greenDiv = (posterizationFilter.greenDiv + dy) % 12;
+							break;
+					}
 				}
 			});
 			topleft.filter = posterizationFilter;
@@ -86,26 +109,38 @@ package example {
 
 		}
 
-		private function _createQuad(xx:int, yy:int, title:String=null, moveHandler:Function=null):Quad {
+		private function _createQuad(xx:int, yy:int, title:String=null, picChangeHadler:Function=null, moveHandler:Function=null):Quad {
 			var index:uint = ~~(Math.random()*_images.length);
-			var wait:int = 60 * 2.0;
+			var targetAlpha:Number = 1.0;
 			var tfContainer:Sprite;
 			var q:Quad = Quad.fromTexture(_getTexture(index));
+			var tid:uint;
 			var font:BitmapFont = TextField.getBitmapFont("mini");
+			var touchCnt:uint = 0;
 			q.x = xx;
 			q.y = yy;
 			addChild(q);
 			_quads.push(q);
+			function fadeInAfter(delay:uint):void {
+				clearTimeout(tid);
+				tid = setTimeout(function():void{
+					targetAlpha = 1.0;
+				}, delay);
+			}
 			q.addEventListener(TouchEvent.TOUCH, function(ev:TouchEvent):void{
-				if(ev.getTouch(q, TouchPhase.ENDED)){
+				var touchEnd:Touch = ev.getTouch(q, TouchPhase.ENDED);
+				if(touchEnd){
 					index++;
 					q.texture = _getTexture(index);
-					if(tfContainer) {
-						wait = 60 * 5.0;
-						tfContainer.alpha = 1.0;
+					targetAlpha = 0.0;
+					fadeInAfter(1500);
+					if(picChangeHadler) {
+						picChangeHadler.apply(null, [touchEnd.getLocation(q.parent,sPoint), ++touchCnt]);
 					}
 				} else {
 					var touchMove:Touch = ev.getTouch(q, TouchPhase.HOVER);
+					targetAlpha = 0.0;
+					fadeInAfter(1500);
 					if(moveHandler != null && touchMove) {
 						moveHandler.apply(null, [touchMove.getMovement(q.parent, sPoint)]);
 					}
@@ -113,7 +148,7 @@ package example {
 			});
 			if(title) {
 				tfContainer = new Sprite();
-				tfContainer.alpha = 1.0;
+				tfContainer.alpha = 0.0;
 				tfContainer.x = xx;
 				tfContainer.y = yy;
 				tfContainer.touchGroup = true;
@@ -123,17 +158,19 @@ package example {
 				tf1.format = new TextFormat(font.name, 48, 0x111111);
 				tfContainer.addChild(tf1);
 				var tf2:TextField = new TextField(240, 240, title);
-				tf2.format = new TextFormat(font.name, 48, 0xffffff);
+				tf2.format = new TextFormat(font.name, 48, 0x111111);
 				tfContainer.addChild(tf2);
-				tf2.scale = 0.98;
 				tf2.x = 2; tf2.y = 2;
-				tf1.addEventListener(Event.ENTER_FRAME, function(ev:Event):void {
-					if(wait == 0) {
-						if(tfContainer.alpha > 0) {
-							tfContainer.alpha -= 0.02;
-						}
+				var tf3:TextField = new TextField(240, 240, title);
+				tf3.format = new TextFormat(font.name, 48, 0xffffff);
+				tfContainer.addChild(tf3);
+				tf3.x = 1; tf3.y = 1;
+				tfContainer.addEventListener(Event.ENTER_FRAME, function(ev:Event):void {
+					var da:Number = targetAlpha - tfContainer.alpha;
+					if(da < 0) {
+						tfContainer.alpha += da * 0.10;
 					} else {
-						wait--;
+						tfContainer.alpha += da * 0.05;
 					}
 				});
 			}
