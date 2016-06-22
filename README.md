@@ -1,2 +1,2 @@
-# Starling2FIltersAndStyles
-FIlter and style classes for starling2.x
+# Starling2FiltersAndStyles
+Filter and style classes for starling2.x

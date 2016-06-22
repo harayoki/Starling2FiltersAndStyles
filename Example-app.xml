@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<application xmlns="http://ns.adobe.com/air/application/21.0">
+
+    <id>Example</id>
+    <filename>Example</filename>
+    <name>Example</name>
+    <versionNumber>0.0.1</versionNumber>
+
+    <initialWindow>
+        <content></content>
+        <visible>true</visible>
+        <minimizable>true</minimizable>
+        <maximizable>true</maximizable>
+        <resizable>true</resizable>
+        <width>760</width>
+        <height>780</height> <!-- +header -->
+        <renderMode>direct</renderMode>
+        <depthAndStencil>true</depthAndStencil>
+    </initialWindow>
+
+</application>
