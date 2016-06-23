@@ -12,8 +12,8 @@
         <minimizable>true</minimizable>
         <maximizable>true</maximizable>
         <resizable>true</resizable>
-        <width>760</width>
-        <height>780</height> <!-- +header -->
+        <width>960</width> <!-- 240 * 4 -->
+        <height>980</height> <!-- 240 * 4 + header -->
         <renderMode>direct</renderMode>
         <depthAndStencil>true</depthAndStencil>
     </initialWindow>

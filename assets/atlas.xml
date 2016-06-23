@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://www.codeandweb.com/texturepacker-->
+<!-- $TexturePacker:SmartUpdate:f4332e74544d849f2d5ad5c0b081fdb8:aca41213cd816bded621b5c85696a637:cde709370900f12288f3449eded86f07$ -->
+<TextureAtlas imagePath="atlas.png" width="792" height="242">
+    <SubTexture name="himawari" x="1" y="1" width="240" height="240"/>
+    <SubTexture name="kota" x="243" y="1" width="240" height="240"/>
+    <SubTexture name="lenna" x="485" y="1" width="240" height="240"/>
+    <SubTexture name="slash" x="727" y="1" width="64" height="64"/>
+    <SubTexture name="white" x="727" y="67" width="16" height="16"/>
+</TextureAtlas>
