@@ -7,6 +7,9 @@ package example {
 	import flash.utils.setTimeout;
 
 	import harayoki.starling2.filters.PosterizationFilter;
+	import harayoki.starling2.filters.TimeFilterBase;
+
+	import starling.animation.Juggler;
 
 	import starling.core.Starling;
 	import starling.display.Image;
@@ -111,13 +114,15 @@ package example {
 					"http://creativecommons.org/publicdomain/zero/1.0/deed.ja"
 				].join("\n")
 			);
-			var normal:Quad = _createImage(0, 0, "NO EFFECT", function(movePoint:Point):void{
+			var mainQuad:Quad = _createImage(0, 0, "NO EFFECT", function(movePoint:Point):void{
 				//mainInfo.visible = true;
 			});
 
+			////////// POSTERIZATION //////////
+
 			var pstInfo:TextField = _createInfo(0, IMAGE_SIZE.height, "");
 			var pstFilter:PosterizationFilter = new PosterizationFilter(8,8,8,8);
-			var topleft:Quad = _createImage(
+			var pstQuad:Quad = _createImage(
 				IMAGE_SIZE.width, IMAGE_SIZE.height, "POSTERIZATION", function(movePoint:Point):void {
 					updatePstInfo(movePoint);
 			});
@@ -160,10 +165,26 @@ package example {
 					"Alpha Div :" + (" " + pstFilter.alphaDiv).slice(-2)
 				].join("\n");
 			};
-			topleft.filter = pstFilter;
+			pstQuad.filter = pstFilter;
 			updatePstInfo();
 
-			// var bottomLeft:Quad = _createImage(10, 480 + 30);
+			////////// T //////////
+
+			var timeBaseFilter:TimeFilterBase = new TimeFilterBase();
+			Starling.juggler.add(timeBaseFilter);
+			var timeBaseInfo:TextField = _createInfo(IMAGE_SIZE.width*3, IMAGE_SIZE.height*0, "aaaa");
+			var timerBaseQuad:Quad = _createImage(
+				IMAGE_SIZE.width*2, 0, "TIMER BASE TEST", function(movePoint:Point):void {
+					updateTimerBaseInfo(movePoint);
+				});
+			var updateTimerBaseInfo:Function = function(movePoint:Point=null):void {
+				if(movePoint) {
+				}
+			};
+			timerBaseQuad.filter = timeBaseFilter;
+			updateTimerBaseInfo();
+
+			//////////
 
 			_shuffleImages();
 

@@ -1,55 +1,29 @@
 package harayoki.starling2.filters {
 
+	import starling.animation.IAnimatable;
 	import starling.filters.FragmentFilter;
 	import starling.rendering.FilterEffect;
 
-	public class PosterizationFilter extends FragmentFilter
+	public class TimeFilterBase extends FragmentFilter implements IAnimatable
 	{
-		public function PosterizationFilter(
-			redDiv:uint=2, greenDiv:uint=4, blueDiv:uint=4, alphaDiv:uint=4):void
+		protected var timePassed:Number = 0;
+		public function TimeFilterBase():void
 		{
-			colorOffsetEffect.redDiv = redDiv;
-			colorOffsetEffect.greenDiv = greenDiv;
-			colorOffsetEffect.blueDiv = blueDiv;
-			colorOffsetEffect.alphaDiv = alphaDiv;
 		}
 
 		override protected function createEffect():FilterEffect
 		{
-			return new PosterizationEffect();
+			return new TimeEffect();
 		}
 
-		private function get colorOffsetEffect():PosterizationEffect
-		{
-			return effect as PosterizationEffect;
-		}
-
-		public function get redDiv():uint { return colorOffsetEffect.redDiv; }
-		public function set redDiv(value:uint):void
-		{
-			colorOffsetEffect.redDiv = value < 2 ? 2.0 : value;
+		public function advanceTime(time:Number):void {
+			timeEffect.timePassed += time;
 			setRequiresRedraw();
 		}
 
-		public function get greenDiv():uint { return colorOffsetEffect.greenDiv; }
-		public function set greenDiv(value:uint):void
+		private function get timeEffect():TimeEffect
 		{
-			colorOffsetEffect.greenDiv = value < 2 ? 2.0 : value;
-			setRequiresRedraw();
-		}
-
-		public function get blueDiv():uint { return colorOffsetEffect.blueDiv; }
-		public function set blueDiv(value:uint):void
-		{
-			colorOffsetEffect.blueDiv = value < 2 ? 2.0 : value;
-			setRequiresRedraw();
-		}
-
-		public function get alphaDiv():uint { return colorOffsetEffect.alphaDiv; }
-		public function set alphaDiv(value:uint):void
-		{
-			colorOffsetEffect.alphaDiv = value < 2 ? 2.0 : value;
-			setRequiresRedraw();
+			return effect as TimeEffect;
 		}
 
 	}
@@ -63,11 +37,11 @@ import harayoki.stage3d.agal.AGAL1CodePrinterForBaselineExtendedProfile;
 import starling.rendering.FilterEffect;
 import starling.rendering.Program;
 
-class PosterizationEffect extends FilterEffect
+class TimeEffect extends FilterEffect
 {
 	private var _divs0:Vector.<Number>;
 
-	public function PosterizationEffect()
+	public function TimeEffect()
 	{
 		_divs0 = new Vector.<Number>(4, true);
 	}
@@ -99,23 +73,17 @@ class PosterizationEffect extends FilterEffect
 		super.beforeDraw(context);
 	}
 
-	public function get redDiv():Number { return _divs0[0]; }
-	public function set redDiv(value:Number):void { _divs0[0] = value; }
-
-	public function get greenDiv():Number { return _divs0[1]; }
-	public function set greenDiv(value:Number):void { _divs0[1] = value; }
-
-	public function get blueDiv():Number { return _divs0[2]; }
-	public function set blueDiv(value:Number):void { _divs0[2] = value; }
-
-	public function get alphaDiv():Number { return _divs0[3]; }
-	public function set alphaDiv(value:Number):void { _divs0[3] = value; }
+	public function get timePassed():Number { return _divs0[0]; }
+	public function set timePassed(value:Number):void { _divs0[0] = value; }
 
 }
 
 internal class MyAGALCodePrinter extends AGAL1CodePrinterForBaselineExtendedProfile {
 
 	public override function setupCode():void {
+
+		move(oc, ft0);
+		return;
 
 		// PMA(premultiplied alpha)演算されているのを元の値に戻す  rgb /= a
 		divide(ft0.xyz, ft0.xyz, ft0.www);

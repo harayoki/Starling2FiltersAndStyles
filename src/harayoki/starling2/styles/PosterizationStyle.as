@@ -172,7 +172,7 @@ internal class FragmentShaderPrinter extends AGAL1CodePrinterForBaselineExtended
 
 	public var useTexture:Boolean;
 
-	public override function print():String {
+	public override function setupCode():void {
 
 		if(useTexture) {
 			multiply(ft0, ft0, v1); // multiply color with texel color
@@ -212,6 +212,5 @@ internal class FragmentShaderPrinter extends AGAL1CodePrinterForBaselineExtended
 		// ocに出力
 		move(oc, ft0);
 
-		return super.print();
 	}
 }
