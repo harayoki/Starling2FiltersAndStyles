@@ -3,7 +3,6 @@ package example {
 	import flash.display3D.Context3DProfile;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-	import flash.utils.clearInterval;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 
@@ -17,7 +16,6 @@ package example {
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.text.BitmapFont;
-	import starling.text.MiniBitmapFont;
 	import starling.text.TextField;
 	import starling.text.TextFormat;
 	import starling.textures.Texture;
@@ -70,35 +68,37 @@ package example {
 
 			var posterizationFilter:PosterizationFilter = new PosterizationFilter(8,8,8,8);
 			var touchCnt:uint = 0;
-			var topleft:Quad = _createQuad(10, 10, "POSTERIZATION\nFILTER", function(touchPoint:Point, cnt:uint):void{
-				touchCnt = cnt;
-			},function(movePoint:Point){
+			var topleft:Quad = _createQuad(10, 10, "POSTERIZATION\nFILTER\n/STYLE", function(hoverPoint:Point, hoverCnt:uint):void{
+				touchCnt = hoverCnt;
+			},function(touchPoint:Point):void{
+				// texture change
+			},function(movePoint:Point):void{
 				var cnt:uint = touchCnt % 3;
 				if(movePoint.x != 0) {
 					var dx:int = movePoint.x > 0 ? 1 : -1;
 					var dy:int = movePoint.y > 0 ? 1 : -1;
 					switch (cnt) {
 						case 0:
-							posterizationFilter.redDiv = (posterizationFilter.redDiv + dx) % 12;
+							posterizationFilter.redDiv = (posterizationFilter.redDiv + dx) % 16;
 							break;
 						case 1:
-							posterizationFilter.greenDiv = (posterizationFilter.greenDiv + dx) % 12;
+							posterizationFilter.greenDiv = (posterizationFilter.greenDiv + dx) % 16;
 							break;
 						case 2:
-							posterizationFilter.blueDiv = (posterizationFilter.blueDiv + dx) % 12;
+							posterizationFilter.blueDiv = (posterizationFilter.blueDiv + dx) % 16;
 							break;
 					}
 				}
 				if(movePoint.y != 0) {
 					switch (cnt) {
 						case 0:
-							posterizationFilter.blueDiv = (posterizationFilter.blueDiv + dy) % 12;
+							posterizationFilter.blueDiv = (posterizationFilter.blueDiv + dy) % 16;
 							break;
 						case 1:
-							posterizationFilter.redDiv = (posterizationFilter.redDiv + dy) % 12;
+							posterizationFilter.redDiv = (posterizationFilter.redDiv + dy) % 16;
 							break;
 						case 2:
-							posterizationFilter.greenDiv = (posterizationFilter.greenDiv + dy) % 12;
+							posterizationFilter.greenDiv = (posterizationFilter.greenDiv + dy) % 16;
 							break;
 					}
 				}
@@ -109,14 +109,14 @@ package example {
 
 		}
 
-		private function _createQuad(xx:int, yy:int, title:String=null, picChangeHadler:Function=null, moveHandler:Function=null):Quad {
+		private function _createQuad(xx:int, yy:int, title:String=null, hoverHandler:Function=null, picChangeHadler:Function=null, moveHandler:Function=null):Quad {
 			var index:uint = ~~(Math.random()*_images.length);
 			var targetAlpha:Number = 1.0;
 			var tfContainer:Sprite;
 			var q:Quad = Quad.fromTexture(_getTexture(index));
 			var tid:uint;
 			var font:BitmapFont = TextField.getBitmapFont("mini");
-			var touchCnt:uint = 0;
+			var hoverCnt:uint = 0;
 			q.x = xx;
 			q.y = yy;
 			addChild(q);
@@ -129,24 +129,40 @@ package example {
 			}
 			q.addEventListener(TouchEvent.TOUCH, function(ev:TouchEvent):void{
 				var touchEnd:Touch = ev.getTouch(q, TouchPhase.ENDED);
-				if(touchEnd){
+				var touchMove:Touch = ev.getTouch(q, TouchPhase.HOVER);
+				var touchBegan:Touch = ev.getTouch(q, TouchPhase.BEGAN);
+				if(touchBegan){ // TODO hover beganに変更
+					targetAlpha = 0.0;
+					fadeInAfter(1500);
+					if(hoverHandler != null) {
+						hoverHandler.apply(null, [touchBegan.getLocation(q.parent,sPoint), ++hoverCnt])
+					}
+				} else if(touchEnd){
 					index++;
 					q.texture = _getTexture(index);
 					targetAlpha = 0.0;
 					fadeInAfter(1500);
 					if(picChangeHadler) {
-						picChangeHadler.apply(null, [touchEnd.getLocation(q.parent,sPoint), ++touchCnt]);
+						picChangeHadler.apply(null, [touchEnd.getLocation(q.parent,sPoint)]);
 					}
-				} else {
-					var touchMove:Touch = ev.getTouch(q, TouchPhase.HOVER);
+				} else if(touchMove){
 					targetAlpha = 0.0;
 					fadeInAfter(1500);
-					if(moveHandler != null && touchMove) {
+					if(moveHandler != null) {
 						moveHandler.apply(null, [touchMove.getMovement(q.parent, sPoint)]);
 					}
 				}
 			});
 			if(title) {
+
+				function createText(xx:int,yy:int,color:uint):TextField{
+					var tf:TextField = new TextField(240, 240, title);
+					tf.format = new TextFormat(font.name, 48, color);
+					tf.x = xx;
+					tf.y = yy;
+					tf.batchable = true;
+					return tf;
+				}
 				tfContainer = new Sprite();
 				tfContainer.alpha = 0.0;
 				tfContainer.x = xx;
@@ -154,23 +170,15 @@ package example {
 				tfContainer.touchGroup = true;
 				tfContainer.touchable = false;
 				addChild(tfContainer);
-				var tf1:TextField = new TextField(240, 240, title);
-				tf1.format = new TextFormat(font.name, 48, 0x111111);
-				tfContainer.addChild(tf1);
-				var tf2:TextField = new TextField(240, 240, title);
-				tf2.format = new TextFormat(font.name, 48, 0x111111);
-				tfContainer.addChild(tf2);
-				tf2.x = 2; tf2.y = 2;
-				var tf3:TextField = new TextField(240, 240, title);
-				tf3.format = new TextFormat(font.name, 48, 0xffffff);
-				tfContainer.addChild(tf3);
-				tf3.x = 1; tf3.y = 1;
+				tfContainer.addChild(createText(0, 0, 0x000000));
+				tfContainer.addChild(createText(2, 2, 0x000000));
+				tfContainer.addChild(createText(1, 1, 0xffffff));
 				tfContainer.addEventListener(Event.ENTER_FRAME, function(ev:Event):void {
 					var da:Number = targetAlpha - tfContainer.alpha;
 					if(da < 0) {
-						tfContainer.alpha += da * 0.10;
+						tfContainer.alpha += da * 0.200;
 					} else {
-						tfContainer.alpha += da * 0.05;
+						tfContainer.alpha += da * 0.075;
 					}
 				});
 			}
