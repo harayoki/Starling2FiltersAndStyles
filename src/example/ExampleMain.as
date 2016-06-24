@@ -9,8 +9,6 @@ package example {
 	import harayoki.starling2.filters.PosterizationFilter;
 	import harayoki.starling2.filters.TimeFilterBase;
 
-	import starling.animation.Juggler;
-
 	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.display.Quad;
@@ -26,7 +24,7 @@ package example {
 	import starling.utils.Align;
 	import starling.utils.AssetManager;
 
-	public class StarlingMain extends Sprite{
+	public class ExampleMain extends Sprite{
 
 		private static const BG_COLOR:uint = 0x111111;
 		private static const sPoint:Point = new Point();
@@ -36,7 +34,7 @@ package example {
 
 		public static function start(stage:Stage):void {
 			var starling:Starling = new Starling(
-				StarlingMain,
+				ExampleMain,
 				stage,
 				CONTENT_SIZE,
 				null,
@@ -58,7 +56,7 @@ package example {
 		private var _infos:Vector.<TextField> = new <TextField>[];
 		private var _shuffling:Boolean;
 
-		public function StarlingMain() {
+		public function ExampleMain() {
 			_assetManager = new AssetManager();
 			_assetManager.enqueue("atlas.png");
 			_assetManager.enqueue("atlas.xml");
@@ -99,9 +97,9 @@ package example {
 				if(ev.getTouch(bg.parent, TouchPhase.HOVER)) {
 					moveCnt++;
 					_resetTimer();
-//					for each(var tf:TextField in _infos) {
-//						tf.visible = false;
-//					}
+					for each(var tf:TextField in _infos) {
+						tf.visible = false;
+					}
 				}
 			});
 
@@ -111,11 +109,12 @@ package example {
 					"",
 					"CC0 1.0 Universal",
 					"All codes are licensed under CC0.",
+					"",
 					"http://creativecommons.org/publicdomain/zero/1.0/deed.ja"
-				].join("\n")
+				].join("\n"), false
 			);
-			var mainQuad:Quad = _createImage(0, 0, "NO EFFECT", function(movePoint:Point):void{
-				//mainInfo.visible = true;
+			mainInfo.visible = true;
+			var mainQuad:Quad = _createImage(0, 0, null, function(movePoint:Point):void{
 			});
 
 			////////// POSTERIZATION //////////
@@ -127,7 +126,7 @@ package example {
 					updatePstInfo(movePoint);
 			});
 			var updatePstInfo:Function = function(movePoint:Point=null):void {
-				//pstInfo.visible = true;
+				pstInfo.visible = true;
 				if(movePoint && movePoint.x != 0) {
 					var dx:int = movePoint.x > 0 ? 1 : -1;
 					var dy:int = movePoint.y > 0 ? 1 : -1;
@@ -172,9 +171,10 @@ package example {
 
 			var timeBaseFilter:TimeFilterBase = new TimeFilterBase();
 			Starling.juggler.add(timeBaseFilter);
-			var timeBaseInfo:TextField = _createInfo(IMAGE_SIZE.width*3, IMAGE_SIZE.height*0, "aaaa");
+			var timeBaseInfo:TextField = _createInfo(IMAGE_SIZE.width*3, IMAGE_SIZE.height*0, "N/A");
 			var timerBaseQuad:Quad = _createImage(
-				IMAGE_SIZE.width*2, 0, "TIMER BASE TEST", function(movePoint:Point):void {
+				IMAGE_SIZE.width*2, 0, "TIMER TEST", function(movePoint:Point):void {
+					timeBaseInfo.visible = true;
 					updateTimerBaseInfo(movePoint);
 				});
 			var updateTimerBaseInfo:Function = function(movePoint:Point=null):void {
@@ -186,11 +186,11 @@ package example {
 
 			//////////
 
-			_shuffleImages();
+			_resetTimer();
 
 		}
 
-		private function _createInfo(xx:int, yy:int, text:String="", scale:Number=1.0):TextField {
+		private function _createInfo(xx:int, yy:int, text:String="", register:Boolean=true, scale:Number=1.0):TextField {
 			var font:BitmapFont = TextField.getBitmapFont("mini");
 			var border:int = 16;
 			var tf:TextField = new TextField(IMAGE_SIZE.width - border*2, IMAGE_SIZE.height- border*2, text);
@@ -201,9 +201,11 @@ package example {
 			tf.batchable = true;
 			tf.border = false;
 			tf.touchable = false;
-			//tf.visible = false;
+			tf.visible = false;
 			addChild(tf);
-			_infos.push(tf);
+			if(register) {
+				_infos.push(tf);
+			}
 			return tf;
 		}
 
@@ -259,36 +261,39 @@ package example {
 				tf.batchable = true;
 				return tf;
 			}
-			tfContainer = new Sprite();
-			tfContainer.alpha = 0.0;
-			tfContainer.x = xx;
-			tfContainer.y = yy;
-			tfContainer.touchGroup = true;
-			tfContainer.touchable = false;
-			addChild(tfContainer);
 
-			var bg:Image = new Image(_assetManager.getTexture("slash"));
-			bg.width = IMAGE_SIZE.width;
-			bg.height = IMAGE_SIZE.height;
-			bg.tileGrid = new flash.geom.Rectangle(0, 0, 64, 64);
-			bg.color = BG_COLOR;
-			tfContainer.addChild(bg);
-			tfContainer.addChild(createText(0, 0, 0x000000));
-			tfContainer.addChild(createText(2, 2, 0x000000));
-			tfContainer.addChild(createText(1, 1, 0xffffff));
-			tfContainer.addEventListener(Event.ENTER_FRAME, function(ev:Event):void {
-				var da:Number = targetAlpha - tfContainer.alpha;
-				if(Math.abs(da) < 0.001) {
-					da = 0;
-					tfContainer.alpha = targetAlpha;
-				}
-				if(da < 0) {
-					tfContainer.alpha += da * 0.200;
-				} else if (da > 0) {
-					tfContainer.alpha += da * 0.075;
-				}
-				tfContainer.visible = tfContainer.alpha >= 0;
-			});
+			if(title != null) {
+				tfContainer = new Sprite();
+				tfContainer.alpha = 0.0;
+				tfContainer.x = xx;
+				tfContainer.y = yy;
+				tfContainer.touchGroup = true;
+				tfContainer.touchable = false;
+				addChild(tfContainer);
+
+				var bg:Image = new Image(_assetManager.getTexture("slash"));
+				bg.width = IMAGE_SIZE.width;
+				bg.height = IMAGE_SIZE.height;
+				bg.tileGrid = new flash.geom.Rectangle(0, 0, 64, 64);
+				bg.color = BG_COLOR;
+				tfContainer.addChild(bg);
+				tfContainer.addChild(createText(1, 1, 0x000000));
+				tfContainer.addChild(createText(0, 0, 0xffffff));
+				tfContainer.addEventListener(Event.ENTER_FRAME, function(ev:Event):void {
+					var da:Number = targetAlpha - tfContainer.alpha;
+					if(Math.abs(da) < 0.001) {
+						da = 0;
+						tfContainer.alpha = targetAlpha;
+					}
+					if(da < 0) {
+						tfContainer.alpha += da * 0.200;
+					} else if (da > 0) {
+						tfContainer.alpha += da * 0.075;
+					}
+					tfContainer.visible = tfContainer.alpha >= 0;
+				});
+			}
+
 			return q;
 		}
 

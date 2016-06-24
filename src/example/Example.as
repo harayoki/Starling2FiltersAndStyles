@@ -11,7 +11,7 @@ package example {
 			stage.color = 0x111111;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 
-			StarlingMain.start(stage);
+			ExampleMain.start(stage);
 			
 		}
 
