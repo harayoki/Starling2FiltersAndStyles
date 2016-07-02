@@ -151,7 +151,7 @@ internal class VertexShaderPrinter extends AGAL1CodePrinterForBaselineExtendedPr
 
 	public var useTexture:Boolean;
 
-	public override function print():String {
+	public override function setupCode():void {
 
 		multiplyMatrix4x4(op, va0, vc0); // 4x4 matrix transform to output clip-space
 
@@ -164,7 +164,6 @@ internal class VertexShaderPrinter extends AGAL1CodePrinterForBaselineExtendedPr
 
 		move(v2, va3); // pass posterization param to fp
 
-		return super.print();
 	}
 }
 

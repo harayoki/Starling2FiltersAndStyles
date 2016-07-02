@@ -7,6 +7,7 @@ package example {
 	import flash.utils.setTimeout;
 
 	import harayoki.starling2.filters.PosterizationFilter;
+	import harayoki.starling2.filters.SlashShadedFilter;
 	import harayoki.starling2.filters.TimeFilterBase;
 
 	import starling.core.Starling;
@@ -169,11 +170,11 @@ package example {
 
 			////////// T //////////
 
-			var timeBaseFilter:TimeFilterBase = new TimeFilterBase();
-			Starling.juggler.add(timeBaseFilter);
+			var timeBaseFilter:SlashShadedFilter = new SlashShadedFilter();
+			// Starling.juggler.add(timeBaseFilter);
 			var timeBaseInfo:TextField = _createInfo(IMAGE_SIZE.width*3, IMAGE_SIZE.height*0, "N/A");
 			var timerBaseQuad:Quad = _createImage(
-				IMAGE_SIZE.width*2, 0, "TIMER TEST", function(movePoint:Point):void {
+				IMAGE_SIZE.width*2, 0, "SLASH", function(movePoint:Point):void {
 					timeBaseInfo.visible = true;
 					updateTimerBaseInfo(movePoint);
 				});
