@@ -191,6 +191,7 @@
             <key type="filename">himawari.png</key>
             <key type="filename">kota.png</key>
             <key type="filename">lenna.png</key>
+            <key type="filename">manmaru.png</key>
             <key type="filename">slash.png</key>
             <key type="filename">white.png</key>
             <struct type="IndividualSpriteSettings">
@@ -205,6 +206,7 @@
             <filename>slash.png</filename>
             <filename>white.png</filename>
             <filename>himawari.png</filename>
+            <filename>manmaru.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
