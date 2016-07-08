@@ -1,17 +1,36 @@
 package harayoki.starling2.filters {
 
+	import starling.animation.IAnimatable;
 	import starling.filters.FragmentFilter;
 	import starling.rendering.FilterEffect;
 
-	public class SlashShadedFilter extends FragmentFilter
+	public class SlashShadedFilter extends FragmentFilter implements IAnimatable
 	{
+		private var _scale:Number = 1.0;
+		private var _degree:Number = 0.0;
+		private var _offset:Number = 0.0;
+		private var _redShade:Number = 0.0;
+		private var _greenShade:Number = 0.0;
+		private var _blueShade:Number = 0.0;
+		private var _alphaShade:Number = 1.0;
+
+		public var timeScale:Number = 1.0;
+
 		public function SlashShadedFilter(
+			scale:Number=2, degree:Number=0,
 			redShade:Number=0.0, greenShade:Number=0.0, blueShade:Number=0.0, alphaShade:Number=1.0):void
 		{
-			slashShadedEffect.redShade = redShade;
-			slashShadedEffect.greenShade = greenShade;
-			slashShadedEffect.blueShade = blueShade;
-			slashShadedEffect.alphaShade = alphaShade;
+			_scale = scale;
+			_degree = degree;
+			slashShadedEffect.redShade = _redShade = redShade;
+			slashShadedEffect.greenShade = _greenShade = greenShade;
+			slashShadedEffect.blueShade = _blueShade = blueShade;
+			slashShadedEffect.alphaShade = _alphaShade = alphaShade;
+			slashShadedEffect.updateMatrix(_degree, _scale);
+		}
+
+		public function advanceTime(time:Number):void {
+			offset += time * 0.05 * timeScale;
 		}
 
 		override protected function createEffect():FilterEffect
@@ -24,32 +43,80 @@ package harayoki.starling2.filters {
 			return effect as SlashShadedEffect;
 		}
 
-		public function get redShade():Number { return slashShadedEffect.redShade; }
+		public function get redShade():Number { return _redShade; }
 		public function set redShade(value:Number):void
 		{
-			slashShadedEffect.redShade = value < 0.0 ? 0.0 : value;
-			setRequiresRedraw();
+			value = value < 0.0 ? 0.0 : value;
+			if(_redShade != value) {
+				_redShade = value;
+				slashShadedEffect.redShade = _redShade;
+				setRequiresRedraw();
+			}
 		}
 
-		public function get greenShade():Number { return slashShadedEffect.greenShade; }
+		public function get greenShade():Number { return _greenShade; }
 		public function set greenShade(value:Number):void
 		{
-			slashShadedEffect.greenShade = value < 0.0 ? 0.0 : value;
-			setRequiresRedraw();
+			value = value < 0.0 ? 0.0 : value;
+			if(_greenShade != value) {
+				_greenShade = value;
+				slashShadedEffect.greenShade = _greenShade;
+				setRequiresRedraw();
+			}
 		}
 
-		public function get blueDiv():Number { return slashShadedEffect.blueShade; }
-		public function set blueDiv(value:Number):void
+		public function get blueShade():Number { return _blueShade; }
+		public function set blueShade(value:Number):void
 		{
-			slashShadedEffect.blueShade = value < 0.0 ? 0.0 : value;
-			setRequiresRedraw();
+			value = value < 0.0 ? 0.0 : value;
+			if(_blueShade != value) {
+				_blueShade = value;
+				slashShadedEffect.blueShade = _blueShade;
+				setRequiresRedraw();
+			}
 		}
 
-		public function get alphaDiv():Number { return slashShadedEffect.alphaShade; }
-		public function set alphaDiv(value:Number):void
+		public function get alphaShade():Number { return _alphaShade; }
+		public function set alphaShade(value:Number):void
 		{
-			slashShadedEffect.alphaShade = value < 0.0 ? 0.0 : value;
-			setRequiresRedraw();
+			value = value < 0.0 ? 0.0 : value;
+			if(_alphaShade != value) {
+				_alphaShade = value;
+				slashShadedEffect.alphaShade = _alphaShade;
+				setRequiresRedraw();
+			}
+		}
+
+		public function get scale():Number { return _scale; }
+		public function set scale(value:Number):void
+		{
+			value = value < 1.0 ? 1.0 : value;
+			if(_scale != value) {
+				_scale = value;
+				slashShadedEffect.updateMatrix(_degree, _scale)
+				setRequiresRedraw();
+			}
+		}
+
+		public function get degree():Number { return _degree; }
+		public function set degree(value:Number):void
+		{
+			value = value % 360;
+			if(_degree != value) {
+				_degree = value;
+				slashShadedEffect.updateMatrix(_degree, _scale)
+				setRequiresRedraw();
+			}
+		}
+
+		public function get offset():Number { return _offset; }
+		public function set offset(value:Number):void
+		{
+			if(_offset != value) {
+				_offset = value;
+				slashShadedEffect.offset = _offset;
+				setRequiresRedraw();
+			}
 		}
 
 	}
@@ -76,11 +143,9 @@ internal class SlashShadedEffect extends FilterEffect
 	{
 		_color = new Vector.<Number>(4, true);
 		_mat = new Matrix3D();
-		_mat.appendRotation(45, Vector3D.Z_AXIS);
-		_mat.appendScale(0.5, 0.5, 1.0);
-		_mat.appendTranslation(0, 100, 0);
-		_vars = new <Number>[0, 1, 2, 0.05];
+		_vars = new <Number>[0, 1, 2, 0];
 		_vars.fixed = true;
+		updateMatrix(0, 1);
 	}
 
 	override protected function createProgram():Program
@@ -110,17 +175,21 @@ internal class SlashShadedEffect extends FilterEffect
 		super.beforeDraw(context);
 	}
 
-	public function get redShade():Number { return _color[0]; }
 	public function set redShade(value:Number):void { _color[0] = value; }
 
-	public function get greenShade():Number { return _color[1]; }
 	public function set greenShade(value:Number):void { _color[1] = value; }
 
-	public function get blueShade():Number { return _color[2]; }
 	public function set blueShade(value:Number):void { _color[2] = value; }
 
-	public function get alphaShade():Number { return _color[3]; }
 	public function set alphaShade(value:Number):void { _color[3] = value; }
+
+	public function set offset(value:Number):void { _vars[3] = value; }
+
+	public function updateMatrix(degree:Number, scale:Number):void {
+		_mat.identity();
+		_mat.appendRotation(degree, Vector3D.Z_AXIS);
+		_mat.appendScale(1/ scale, 1/ scale, 1.0);
+	}
 
 }
 
@@ -137,16 +206,10 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 
 	public override function setupCode():void {
 
-		var PARAMS:AGALRegisterConstant = fc1;
-		var PARAM_0:AGALRegisterConstant = fc1.x;
-		var PARAM_1:AGALRegisterConstant = fc1.y;
-		var PARAM_2:AGALRegisterConstant = fc1.z;
-		var C11:AGALRegisterConstant = fc1.yy;
-		var PARAM_1111:AGALRegisterConstant = fc1.yyyy;
-		var C22:AGALRegisterConstant = fc1.zz;
-		var PARAM_2222:AGALRegisterConstant = fc1.zzzz;
-		var PARAM_P:AGALRegisterConstant = fc1.w;
-
+		var ZERO:AGALRegisterConstant   = fc1.x;
+		var ONE:AGALRegisterConstant   = fc1.y;
+		var TWO:AGALRegisterConstant   = fc1.zzzz;
+		var OFFSET:AGALRegisterConstant = fc1.w;
 		var MATRIX:AGALRegisterConstant = fc2;
 
 		// tex ft0, v0, fs0 <2d, ****>
@@ -154,69 +217,37 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		// PMA(premultiplied alpha)演算されているのを元の値に戻す  rgb /= a
 		divide(ft0.xyz, ft0.xyz, ft0.www);
 
-		// 少数部分破棄
+		// 座標値取得
 		move(ft1, v1);
-		multiplyMatrix4x4(ft1, ft1, MATRIX);
+
+		// オフセット移動
+		add(ft1.y, ft1.y, OFFSET);
+
+		// 少数部分破棄
+		multiplyMatrix3x3(ft1.xyz, ft1.xyz, MATRIX);
 		fractional(ft2, ft1);
 		subtract(ft1, ft1, ft2);
 
 		// 偶数判定
-		divide(ft2, ft1, PARAM_2);
+		divide(ft2, ft1, TWO);
 		fractional(ft2, ft2);
-		setIfEqual(ft2.z, ft2.y, PARAM_0);
+		setIfEqual(ft2.z, ft2.y, ZERO);
 
-		multiply(ft0.xyz, ft0.xyz, ft2.zzz);
+		// 偶数ならテクスチャカラーをそのまま使う、奇数なら黒になる
+		multiply(ft0.xyzw, ft0.xyzw, ft2.zzzz);
 
-		setIfNotEqual(ft2.z, ft2.y, PARAM_0);
+		// 奇数なら指定カラーで塗りつぶす
+		setIfNotEqual(ft2.z, ft2.z, ONE);
 		move(ft3, fc0);
 		multiply(ft3, ft3, ft2.zzzz);
 		multiply(ft3.w, ft3.w, ft0.w);
 		add(ft0, ft0, ft3);
 
 		// PMAをやり直す rgb *= a
-		multiply(ft0, ft0.xyz, ft0.www);
+		multiply(ft0.xyz, ft0.xyz, ft0.www);
 
 		move(oc, ft0);
 
 	}
 
 }
-
-/*
-
- ////////// x % 4 と y % 4 を作る //////////
-
- // ft1 = Math.floor(v1)
- fractional(ft1, v1); // ex) 15.4 -> 0.4
- subtract(ft1, v1, ft1); // ex) ft1 = 15.4 - 0.4 = 15
-
- // ft2 = ft1 / 4
- divide(ft2.xyzw, ft1.xyzw, fc1.wwww);  // ex) ft2 = 15/4 = 3.75
-
- // ft2 = Math.floor(ft2);
- fractional(ft3, ft2); // ex) ft3 = 0.75
- subtract(ft2, ft2, ft3); // ex) ft2 = 3
-
- // ft2*=4
- multiply(ft2.xyzw, ft2.xyzw, fc1.wwww); // ex) ft2 = 12
-
- // ft1 = ft1 - ft2
- subtract(ft1, ft1, ft2); // ex) ft1 = 3
-
- ////////// (x%4)+(y%4) == 3 なら処理を変える //////////
-
- // z = x + y
- add(ft1.z, ft1.x, ft1.y);
-
- // ft3.x =  (z == 3) ? 1 : 0
- setIfNotEqual(ft3.x, ft1.z, fc1.w);
-
- // ft3.y =  !ft3.x
- setIfNotEqual(ft3.y, ft3.x, fc1.y)
-
- multiply(ft0.xyzw, ft0.xyzw, ft3.xxxx);
-
- move(ft2, fc0);
- multiply(ft2.xyzw, ft2.xyzw, ft3.yyyy);
- add(oc, ft0, ft2);
- */
