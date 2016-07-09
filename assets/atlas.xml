@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with TexturePacker http://www.codeandweb.com/texturepacker-->
-<!-- $TexturePacker:SmartUpdate:fb0d9b19a18e308ffdbd713910b09c13:8befc88d2398cef71e39a19a8104d9d8:cde709370900f12288f3449eded86f07$ -->
-<TextureAtlas imagePath="atlas.png" width="242" height="1024">
+<!-- $TexturePacker:SmartUpdate:bad01fbdd5ddfebd95324969c72110be:1a62516026f00a77848cbd3a6ed85104:cde709370900f12288f3449eded86f07$ -->
+<TextureAtlas imagePath="atlas.png" width="242" height="1025">
     <SubTexture name="himawari" x="1" y="1" width="240" height="240"/>
     <SubTexture name="kota" x="1" y="243" width="240" height="240"/>
     <SubTexture name="lenna" x="1" y="485" width="240" height="240"/>
-    <SubTexture name="manmaru" x="1" y="727" width="239" height="230" frameX="-1" frameY="-6" frameWidth="240" frameHeight="240"/>
-    <SubTexture name="slash" x="1" y="959" width="64" height="64"/>
-    <SubTexture name="white" x="67" y="959" width="16" height="16"/>
+    <SubTexture name="manmaru" x="1" y="727" width="240" height="231" frameX="0" frameY="-5" frameWidth="240" frameHeight="240"/>
+    <SubTexture name="slash" x="1" y="960" width="64" height="64"/>
+    <SubTexture name="white" x="67" y="960" width="16" height="16"/>
 </TextureAtlas>

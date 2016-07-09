@@ -48,7 +48,7 @@ package example {
 
 		private var _assetManager:AssetManager;
 		private var _textureNames:Vector.<String> = new <String>[
-			 "kota", "lenna", "himawari"
+			 "kota", "lenna", "himawari", "manmaru"
 		];
 		private var _tid:uint;
 		private var _textures:Vector.<Texture> = new <Texture>[];
