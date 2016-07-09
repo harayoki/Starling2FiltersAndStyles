@@ -8,29 +8,27 @@ package harayoki.starling2.filters {
 	{
 		private var _scale:Number = 1.0;
 		private var _degree:Number = 0.0;
+		private var _strength:int = 1;
 		private var _offset:Number = 0.0;
-		private var _redShade:Number = 0.0;
-		private var _greenShade:Number = 0.0;
-		private var _blueShade:Number = 0.0;
-		private var _alphaShade:Number = 1.0;
+		private var _color:uint = 0;
+		private var _alpha:Number = 1.0;
 
 		public var timeScale:Number = 1.0;
 
 		public function ScanLineFilter(
-			scale:Number=2, degree:Number=0,
-			redShade:Number=0.0, greenShade:Number=0.0, blueShade:Number=0.0, alphaShade:Number=1.0):void
+			scale:Number=2.0, degree:Number=0.0, strength:int=1, color:uint=0x000000, alpha:Number=1.0):void
 		{
-			_scale = scale;
-			_degree = degree;
-			slashShadedEffect.redShade = _redShade = redShade;
-			slashShadedEffect.greenShade = _greenShade = greenShade;
-			slashShadedEffect.blueShade = _blueShade = blueShade;
-			slashShadedEffect.alphaShade = _alphaShade = alphaShade;
+			_scale = scale < 1.0 ? 1.0 : scale;
+			_degree = degree % 360;
 			slashShadedEffect.updateMatrix(_degree, _scale);
+			_strength = slashShadedEffect.strength = strength;
+			_color = color;
+			_updateColor();
+			_alpha = slashShadedEffect.alphaShade = alpha < 0.0 ? 0.0 : alpha;
 		}
 
 		public function advanceTime(time:Number):void {
-			offset += time * 0.05 * timeScale;
+			offset += 32 * time * timeScale;
 		}
 
 		override protected function createEffect():FilterEffect
@@ -43,46 +41,31 @@ package harayoki.starling2.filters {
 			return effect as SlashShadedEffect;
 		}
 
-		public function get redShade():Number { return _redShade; }
-		public function set redShade(value:Number):void
+		public function get color():uint { return _color; }
+		public function set color(value:uint):void
 		{
-			value = value < 0.0 ? 0.0 : value;
-			if(_redShade != value) {
-				_redShade = value;
-				slashShadedEffect.redShade = _redShade;
+			if(_color != value) {
+				_color = value;
+				_updateColor();
 				setRequiresRedraw();
 			}
 		}
-
-		public function get greenShade():Number { return _greenShade; }
-		public function set greenShade(value:Number):void
-		{
-			value = value < 0.0 ? 0.0 : value;
-			if(_greenShade != value) {
-				_greenShade = value;
-				slashShadedEffect.greenShade = _greenShade;
-				setRequiresRedraw();
-			}
+		private function _updateColor():void {
+			var r:Number = ((_color & 0xff0000) >> 16) / 255;
+			var g:Number = ((_color & 0x00ff00) >> 8) / 255 ;
+			var b:Number = ((_color & 0x0000ff)) / 255;
+			slashShadedEffect.redShade = r;
+			slashShadedEffect.greenShade = g;
+			slashShadedEffect.blueShade = b;
 		}
 
-		public function get blueShade():Number { return _blueShade; }
-		public function set blueShade(value:Number):void
+		public function get alpha():Number { return _alpha; }
+		public function set alpha(value:Number):void
 		{
 			value = value < 0.0 ? 0.0 : value;
-			if(_blueShade != value) {
-				_blueShade = value;
-				slashShadedEffect.blueShade = _blueShade;
-				setRequiresRedraw();
-			}
-		}
-
-		public function get alphaShade():Number { return _alphaShade; }
-		public function set alphaShade(value:Number):void
-		{
-			value = value < 0.0 ? 0.0 : value;
-			if(_alphaShade != value) {
-				_alphaShade = value;
-				slashShadedEffect.alphaShade = _alphaShade;
+			if(_alpha != value) {
+				_alpha = value;
+				slashShadedEffect.alphaShade = _alpha;
 				setRequiresRedraw();
 			}
 		}
@@ -119,6 +102,16 @@ package harayoki.starling2.filters {
 			}
 		}
 
+		public function get strength():Number { return _strength; }
+		public function set strength(value:Number):void
+		{
+			if(_strength != value) {
+				_strength = value;
+				slashShadedEffect.strength = _strength;
+				setRequiresRedraw();
+			}
+		}
+
 	}
 }
 
@@ -143,7 +136,7 @@ internal class SlashShadedEffect extends FilterEffect
 	{
 		_color = new Vector.<Number>(4, true);
 		_mat = new Matrix3D();
-		_vars = new <Number>[0, 1, 2, 0];
+		_vars = new <Number>[0, 1, 4, 0];
 		_vars.fixed = true;
 		updateMatrix(0, 1);
 	}
@@ -175,15 +168,34 @@ internal class SlashShadedEffect extends FilterEffect
 		super.beforeDraw(context);
 	}
 
-	public function set redShade(value:Number):void { _color[0] = value; }
+	public function set redShade(value:Number):void {
+		_color[0] = value;
+	}
 
-	public function set greenShade(value:Number):void { _color[1] = value; }
+	public function set greenShade(value:Number):void {
+		_color[1] = value;
+	}
 
-	public function set blueShade(value:Number):void { _color[2] = value; }
+	public function set blueShade(value:Number):void {
+		_color[2] = value;
+	}
 
-	public function set alphaShade(value:Number):void { _color[3] = value; }
+	public function set alphaShade(value:Number):void {
+		_color[3] = value;
+	}
 
-	public function set offset(value:Number):void { _vars[3] = value; }
+	public function set strength(value:Number):void {
+		if (value < 0) {
+			value--;
+		} else if (value > 0) {
+			value++
+		}
+		_vars[2] = value;
+	}
+
+	public function set offset(value:Number):void {
+		_vars[3] = value;
+	}
 
 	public function updateMatrix(degree:Number, scale:Number):void {
 		_mat.identity();
@@ -206,11 +218,12 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 
 	public override function setupCode():void {
 
-		var ZERO:AGALRegisterConstant   = fc1.x;
-		var ONE:AGALRegisterConstant   = fc1.y;
-		var TWO:AGALRegisterConstant   = fc1.zzzz;
-		var OFFSET:AGALRegisterConstant = fc1.w;
-		var MATRIX:AGALRegisterConstant = fc2;
+		var FIL_COLOR:AGALRegisterConstant    = fc0;
+		var ZERO:AGALRegisterConstant     = fc1.x;
+		var ONE:AGALRegisterConstant      = fc1.y;
+		var STRENGTH:AGALRegisterConstant = fc1.zzzz;
+		var OFFSET:AGALRegisterConstant   = fc1.w;
+		var MATRIX:AGALRegisterConstant   = fc2;
 
 		// tex ft0, v0, fs0 <2d, ****>
 
@@ -228,20 +241,20 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		fractional(ft2, ft1);
 		subtract(ft1, ft1, ft2);
 
-		// 偶数判定
-		divide(ft2, ft1, TWO);
+		// ON / OFF 判定
+		divide(ft2, ft1, STRENGTH);
 		fractional(ft2, ft2);
-		setIfEqual(ft2.z, ft2.y, ZERO);
+		setIfNotEqual(ft2.z, ft2.y, ZERO);
 
-		// 偶数ならテクスチャカラーをそのまま使う、奇数なら黒になる
-		multiply(ft0.xyzw, ft0.xyzw, ft2.zzzz);
+		// ONならテクスチャカラーをそのまま使う、OFFならいったん黒になる
+		multiply(ft0.xyz, ft0.xyz, ft2.zzz);
 
-		// 奇数なら指定カラーで塗りつぶす
-		setIfNotEqual(ft2.z, ft2.z, ONE);
-		move(ft3, fc0);
-		multiply(ft3, ft3, ft2.zzzz);
-		multiply(ft3.w, ft3.w, ft0.w);
-		add(ft0, ft0, ft3);
+		// 黒い部分を指定カラーで塗りつぶす
+		setIfEqual(ft2.z, ft2.z, ZERO);
+		move(ft3, FIL_COLOR);
+		multiply(ft3.xyz, ft3.xyz, ft2.zzz);
+		add(ft0.xyz, ft0.xyz, ft3.xyz);
+		multiply(ft0.w, ft3.w, ft0.w); // α波は元の透明度をいかして掛け合わせる
 
 		// PMAをやり直す rgb *= a
 		multiply(ft0.xyz, ft0.xyz, ft0.www);
