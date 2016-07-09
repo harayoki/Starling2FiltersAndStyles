@@ -154,6 +154,7 @@ internal class SlashShadedEffect extends FilterEffect
 
 		trace("__________ Vertex Program __________");
 		trace(vertexShaderPrinter.printWithLineNum());
+		trace("");
 		trace("________ Fragment Program __________");
 		trace(fragmentShaderPrinter.printWithLineNum());
 
@@ -218,12 +219,13 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 
 	public override function setupCode():void {
 
-		var FIL_COLOR:AGALRegisterConstant    = fc0;
-		var ZERO:AGALRegisterConstant     = fc1.x;
-		var ONE:AGALRegisterConstant      = fc1.y;
-		var STRENGTH:AGALRegisterConstant = fc1.zzzz;
-		var OFFSET:AGALRegisterConstant   = fc1.w;
-		var MATRIX:AGALRegisterConstant   = fc2;
+		var FILL_COLOR:AGALRegisterConstant  = fc0;
+		var ZERO:AGALRegisterConstant       = fc1.x;
+		var ONE:AGALRegisterConstant        = fc1.y;
+		var STRENGTH:AGALRegisterConstant   = fc1.z;
+		var STRENGTH_xyzw:AGALRegisterConstant = fc1.zzzz;
+		var OFFSET:AGALRegisterConstant     = fc1.w;
+		var MATRIX:AGALRegisterConstant     = fc2;
 
 		// tex ft0, v0, fs0 <2d, ****>
 
@@ -242,7 +244,7 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		subtract(ft1, ft1, ft2);
 
 		// ON / OFF 判定
-		divide(ft2, ft1, STRENGTH);
+		divide(ft2, ft1, STRENGTH_xyzw);
 		fractional(ft2, ft2);
 		setIfNotEqual(ft2.z, ft2.y, ZERO);
 
@@ -251,7 +253,7 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 
 		// 黒い部分を指定カラーで塗りつぶす
 		setIfEqual(ft2.z, ft2.z, ZERO);
-		move(ft3, FIL_COLOR);
+		move(ft3, FILL_COLOR);
 		multiply(ft3.xyz, ft3.xyz, ft2.zzz);
 		add(ft0.xyz, ft0.xyz, ft3.xyz);
 		multiply(ft0.w, ft3.w, ft0.w); // α波は元の透明度をいかして掛け合わせる
