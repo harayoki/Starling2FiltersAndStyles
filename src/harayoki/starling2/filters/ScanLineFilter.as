@@ -4,7 +4,7 @@ package harayoki.starling2.filters {
 	import starling.filters.FragmentFilter;
 	import starling.rendering.FilterEffect;
 
-	public class SlashShadedFilter extends FragmentFilter implements IAnimatable
+	public class ScanLineFilter extends FragmentFilter implements IAnimatable
 	{
 		private var _scale:Number = 1.0;
 		private var _degree:Number = 0.0;
@@ -16,7 +16,7 @@ package harayoki.starling2.filters {
 
 		public var timeScale:Number = 1.0;
 
-		public function SlashShadedFilter(
+		public function ScanLineFilter(
 			scale:Number=2, degree:Number=0,
 			redShade:Number=0.0, greenShade:Number=0.0, blueShade:Number=0.0, alphaShade:Number=1.0):void
 		{
