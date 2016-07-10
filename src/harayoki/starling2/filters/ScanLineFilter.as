@@ -11,6 +11,7 @@ package harayoki.starling2.filters {
 		private var _strength:int = 1;
 		private var _offset:Number = 0.0;
 		private var _color:uint = 0;
+		private var _aspect:Number = 1.0;
 		private var _alpha:Number = 1.0;
 
 		public var timeScale:Number = 1.0;
@@ -76,7 +77,7 @@ package harayoki.starling2.filters {
 			value = value < 1.0 ? 1.0 : value;
 			if(_scale != value) {
 				_scale = value;
-				slashShadedEffect.updateMatrix(_degree, _scale)
+				slashShadedEffect.updateMatrix(_degree, _scale);
 				setRequiresRedraw();
 			}
 		}
@@ -87,7 +88,7 @@ package harayoki.starling2.filters {
 			value = value % 360;
 			if(_degree != value) {
 				_degree = value;
-				slashShadedEffect.updateMatrix(_degree, _scale)
+				slashShadedEffect.updateMatrix(_degree, _scale);
 				setRequiresRedraw();
 			}
 		}
@@ -108,6 +109,16 @@ package harayoki.starling2.filters {
 			if(_strength != value) {
 				_strength = value;
 				slashShadedEffect.strength = _strength;
+				setRequiresRedraw();
+			}
+		}
+
+		public function get aspect():Number { return _aspect; }
+		public function set aspect(value:Number):void
+		{
+			if(_aspect != value) {
+				_aspect = value;
+				slashShadedEffect.aspect = _aspect;
 				setRequiresRedraw();
 			}
 		}
@@ -136,7 +147,7 @@ internal class SlashShadedEffect extends FilterEffect
 	{
 		_color = new Vector.<Number>(4, true);
 		_mat = new Matrix3D();
-		_vars = new <Number>[0, 1, 4, 0];
+		_vars = new <Number>[0, 1, 1, 0];
 		_vars.fixed = true;
 		updateMatrix(0, 1);
 	}
@@ -192,6 +203,10 @@ internal class SlashShadedEffect extends FilterEffect
 		} else if (value > 0) {
 			value++
 		}
+		_vars[1] = value;
+	}
+
+	public function set aspect(value:Number):void {
 		_vars[2] = value;
 	}
 
@@ -222,9 +237,9 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 
 		var FILL_COLOR:AGALRegisterConstant  = fc0;
 		var ZERO:AGALRegisterConstant       = fc1.x;
-		var ONE:AGALRegisterConstant        = fc1.y;
-		var STRENGTH:AGALRegisterConstant   = fc1.z;
-		var STRENGTH_xyzw:AGALRegisterConstant = fc1.zzzz;
+		var STRENGTH:AGALRegisterConstant   = fc1.y;
+		var STRENGTH_xyzw:AGALRegisterConstant = fc1.yyyy;
+		var ASPECT:AGALRegisterConstant        = fc1.z;
 		var OFFSET:AGALRegisterConstant     = fc1.w;
 		var MATRIX:AGALRegisterConstant     = fc2;
 
@@ -236,11 +251,16 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		// 座標値取得
 		move(ft1, v1);
 
-		// オフセット移動
+		// アスペクト補正 (MATRIXにいれていない)
+		multiply(ft1.y, ft1.y, ASPECT);
+
+		// 拡大回転
+		multiplyMatrix3x3(ft1.xyz, ft1.xyz, MATRIX);
+
+		// オフセット移動 (MATRIXにいれていない)
 		add(ft1.y, ft1.y, OFFSET);
 
 		// 少数部分破棄
-		multiplyMatrix3x3(ft1.xyz, ft1.xyz, MATRIX);
 		fractional(ft2, ft1);
 		subtract(ft1, ft1, ft2);
 
