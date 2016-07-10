@@ -116,7 +116,7 @@ package harayoki.starling2.filters {
 			}
 		}
 
-		// アスペクト比設定 -> 必要なさそう
+		// アスペクト比設定 ->
 		//private var _aspect:Number = 1.0;
 		//public function get aspect():Number { return _aspect; }
 		//public function set aspect(value:Number):void
@@ -274,7 +274,14 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		divide(ft2, ft1, STRENGTH_xyzw);
 		fractional(ft2, ft2);
 		setIfNotEqual(ft2.z, ft2.y, ZERO); // ON/OFFフラグ
-		setIfEqual(ft2.z, ft2.z, NOT_REVERSE); // 描画エリア反転処理 条件により反転 (お決まりパターン)
+
+		// 強さ0の時はOFFフラグをなくす
+		setIfEqual(ft2.x, STRENGTH, ZERO); // 強さ0か？
+		add(ft2.z, ft2.z, ft2.x);// 強さ0の場合 ON/OFFフラグが1か2に
+		saturate(ft2.z, ft2.z); // 2を1に変換
+
+		// 描画エリア反転処理 条件により反転 (お決まりパターン)
+		setIfEqual(ft2.z, ft2.z, NOT_REVERSE);
 
 		// ON/OFFフラグ反転処理  (お決まりパターン)
 		setIfEqual(ft2.w, ft2.z, ZERO);
