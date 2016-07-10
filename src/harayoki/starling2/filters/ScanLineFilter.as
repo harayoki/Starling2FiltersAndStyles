@@ -11,7 +11,6 @@ package harayoki.starling2.filters {
 		private var _strength:int = 1;
 		private var _offset:Number = 0.0;
 		private var _color:uint = 0;
-		private var _aspect:Number = 1.0;
 		private var _alpha:Number = 1.0;
 
 		public var timeScale:Number = 1.0;
@@ -106,6 +105,10 @@ package harayoki.starling2.filters {
 		public function get strength():Number { return _strength; }
 		public function set strength(value:Number):void
 		{
+			//５より大きいと表示が荒れる
+			if(Math.abs(value) > 5) {
+				value = value < 0 ? -5 : 5;
+			}
 			if(_strength != value) {
 				_strength = value;
 				slashShadedEffect.strength = _strength;
@@ -113,15 +116,17 @@ package harayoki.starling2.filters {
 			}
 		}
 
-		public function get aspect():Number { return _aspect; }
-		public function set aspect(value:Number):void
-		{
-			if(_aspect != value) {
-				_aspect = value;
-				slashShadedEffect.aspect = _aspect;
-				setRequiresRedraw();
-			}
-		}
+		// アスペクト比設定 -> 必要なさそう
+		//private var _aspect:Number = 1.0;
+		//public function get aspect():Number { return _aspect; }
+		//public function set aspect(value:Number):void
+		//{
+		//	if(_aspect != value) {
+		//		_aspect = value;
+		//		slashShadedEffect.aspect = _aspect;
+		//		setRequiresRedraw();
+		//	}
+		//}
 
 	}
 }
@@ -132,7 +137,9 @@ import flash.geom.Matrix3D;
 import flash.geom.Vector3D;
 
 import harayoki.stage3d.agal.AGAL1CodePrinterForBaselineExtendedProfile;
+import harayoki.stage3d.agal.registers.AGALRegister;
 import harayoki.stage3d.agal.registers.AGALRegisterConstant;
+import harayoki.stage3d.agal.registers.AGALRegisterFragmentTemporary;
 
 import starling.rendering.FilterEffect;
 import starling.rendering.Program;
@@ -197,17 +204,16 @@ internal class SlashShadedEffect extends FilterEffect
 	}
 
 	public function set strength(value:Number):void {
-		// -1 と 1 の効果がないので値を大きくする
+		// -1 と 1 は効果がないので値を大きくする
 		if (value < 0) {
 			value--;
 		} else if (value > 0) {
 			value++
 		}
 		_vars[1] = value;
-	}
 
-	public function set aspect(value:Number):void {
-		_vars[2] = value;
+		//描画エリアを反転しない場合1 する場合0
+		_vars[2] = value >= 0 ? 1 : 0;
 	}
 
 	public function set offset(value:Number):void {
@@ -235,40 +241,43 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 
 	public override function setupCode():void {
 
-		var FILL_COLOR:AGALRegisterConstant  = fc0;
-		var ZERO:AGALRegisterConstant       = fc1.x;
-		var STRENGTH:AGALRegisterConstant   = fc1.y;
-		var STRENGTH_xyzw:AGALRegisterConstant = fc1.yyyy;
-		var ASPECT:AGALRegisterConstant        = fc1.z;
-		var OFFSET:AGALRegisterConstant     = fc1.w;
-		var MATRIX:AGALRegisterConstant     = fc2;
-
 		// tex ft0, v0, fs0 <2d, ****>
 
-		// PMA(premultiplied alpha)演算されているのを元の値に戻す  rgb /= a
+		var FILL_COLOR:AGALRegisterConstant  = fc0;
+		var MATRIX:AGALRegisterConstant     = fc2;
+
+		move(ft7, fc1); // 定数同士の演算エラーになるのをさけるためftに取り出す (お決まりパターン)
+
+		var ZERO:AGALRegister = ft7.x;
+		var STRENGTH:AGALRegister = ft7.y;
+		var STRENGTH_xyzw:AGALRegister = ft7.yyyy;
+		var NOT_REVERSE:AGALRegister = ft7.z;
+		var OFFSET:AGALRegister = ft7.w;
+
+		// PMA(premultiplied alpha)演算されているのを元の値に戻す  rgb /= a (お決まりパターン)
 		divide(ft0.xyz, ft0.xyz, ft0.www);
 
 		// 座標値取得
 		move(ft1, v1);
 
-		// アスペクト補正 (MATRIXにいれていない)
-		multiply(ft1.y, ft1.y, ASPECT);
-
 		// 拡大回転
 		multiplyMatrix3x3(ft1.xyz, ft1.xyz, MATRIX);
 
-		// オフセット移動 (MATRIXにいれていない)
+		// オフセット移動 (MATRIXにはいれていない)
 		add(ft1.y, ft1.y, OFFSET);
 
-		// 少数部分破棄
+		// 少数部分破棄 (お決まりパターン)
 		fractional(ft2, ft1);
 		subtract(ft1, ft1, ft2);
 
 		// ON / OFF 判定
 		divide(ft2, ft1, STRENGTH_xyzw);
 		fractional(ft2, ft2);
-		setIfNotEqual(ft2.z, ft2.y, ZERO); // y:フラグ
-		setIfEqual(ft2.w, ft2.z, ZERO);// z:反転フラグ
+		setIfNotEqual(ft2.z, ft2.y, ZERO); // ON/OFFフラグ
+		setIfEqual(ft2.z, ft2.z, NOT_REVERSE); // 描画エリア反転処理 条件により反転 (お決まりパターン)
+
+		// ON/OFFフラグ反転処理  (お決まりパターン)
+		setIfEqual(ft2.w, ft2.z, ZERO);
 
 		// ONならテクスチャカラーをそのまま使う、OFFならいったん黒になる 透明度は後の計算のため、そのままキープ
 		multiply(ft0.xyz, ft0.xyz, ft2.zzz);
@@ -280,7 +289,7 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		multiply(ft0.w, ft0.w, ft2.z); //透明度マスク
 		add(ft0, ft0, ft3);
 
-		// PMAをやり直す rgb *= a
+		// PMAをやり直す rgb *= a (お決まりパターン)
 		multiply(ft0.xyz, ft0.xyz, ft0.www);
 
 		move(oc, ft0);
