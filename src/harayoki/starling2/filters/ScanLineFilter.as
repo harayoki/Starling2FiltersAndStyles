@@ -8,7 +8,7 @@ package harayoki.starling2.filters {
 	{
 		private var _scale:Number = 1.0;
 		private var _degree:Number = 0.0;
-		private var _distance:int = 1;
+		private var _strength:int = 1;
 		private var _offset:Number = 0.0;
 		private var _color:uint = 0;
 		private var _alpha:Number = 1.0;
@@ -21,7 +21,7 @@ package harayoki.starling2.filters {
 			_scale = scale < 1.0 ? 1.0 : scale;
 			_degree = degree % 360;
 			slashShadedEffect.updateMatrix(_degree, _scale);
-			_distance = slashShadedEffect.disatance = disatance;
+			_strength = slashShadedEffect.strength = disatance;
 			_color = color;
 			_updateColor();
 			_alpha = slashShadedEffect.alphaShade = alpha < 0.0 ? 0.0 : alpha;
@@ -102,12 +102,12 @@ package harayoki.starling2.filters {
 			}
 		}
 
-		public function get disatance():Number { return _distance; }
-		public function set disatance(value:Number):void
+		public function get strength():Number { return _strength; }
+		public function set strength(value:Number):void
 		{
-			if(_distance != value) {
-				_distance = value;
-				slashShadedEffect.disatance = _distance;
+			if(_strength != value) {
+				_strength = value;
+				slashShadedEffect.strength = _strength;
 				setRequiresRedraw();
 			}
 		}
@@ -185,7 +185,8 @@ internal class SlashShadedEffect extends FilterEffect
 		_color[3] = value;
 	}
 
-	public function set disatance(value:Number):void {
+	public function set strength(value:Number):void {
+		// -1 と 1 の効果がないので値を大きくする
 		if (value < 0) {
 			value--;
 		} else if (value > 0) {
@@ -222,8 +223,8 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		var FILL_COLOR:AGALRegisterConstant  = fc0;
 		var ZERO:AGALRegisterConstant       = fc1.x;
 		var ONE:AGALRegisterConstant        = fc1.y;
-		var DISTANCE:AGALRegisterConstant   = fc1.z;
-		var DISTANCE_xyzw:AGALRegisterConstant = fc1.zzzz;
+		var STRENGTH:AGALRegisterConstant   = fc1.z;
+		var STRENGTH_xyzw:AGALRegisterConstant = fc1.zzzz;
 		var OFFSET:AGALRegisterConstant     = fc1.w;
 		var MATRIX:AGALRegisterConstant     = fc2;
 
@@ -244,7 +245,7 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		subtract(ft1, ft1, ft2);
 
 		// ON / OFF 判定
-		divide(ft2, ft1, DISTANCE_xyzw);
+		divide(ft2, ft1, STRENGTH_xyzw);
 		fractional(ft2, ft2);
 		setIfNotEqual(ft2.z, ft2.y, ZERO); // y:フラグ
 		setIfEqual(ft2.w, ft2.z, ZERO);// z:反転フラグ
