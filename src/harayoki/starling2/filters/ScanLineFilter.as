@@ -246,17 +246,18 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		// ON / OFF 判定
 		divide(ft2, ft1, DISTANCE_xyzw);
 		fractional(ft2, ft2);
-		setIfNotEqual(ft2.z, ft2.y, ZERO);
+		setIfNotEqual(ft2.z, ft2.y, ZERO); // y:フラグ
+		setIfEqual(ft2.w, ft2.z, ZERO);// z:反転フラグ
 
-		// ONならテクスチャカラーをそのまま使う、OFFならいったん黒になる
+		// ONならテクスチャカラーをそのまま使う、OFFならいったん黒になる 透明度は後の計算のため、そのままキープ
 		multiply(ft0.xyz, ft0.xyz, ft2.zzz);
 
-		// 黒い部分を指定カラーで塗りつぶす
-		setIfEqual(ft2.z, ft2.z, ZERO);
+		// RGBカラー適用
 		move(ft3, FILL_COLOR);
-		multiply(ft3.xyz, ft3.xyz, ft2.zzz);
-		add(ft0.xyz, ft0.xyz, ft3.xyz);
-		multiply(ft0.w, ft3.w, ft0.w); // α波は元の透明度をいかして掛け合わせる
+		multiply(ft3.xyzw, ft3.xyzw, ft2.wwww); // 黒くなった部分を指定カラーで塗りつぶす
+		multiply(ft3.w, ft3.w, ft0.w); //α 値は元の透明度をいかして掛け合わせる
+		multiply(ft0.w, ft0.w, ft2.z); //透明度マスク
+		add(ft0, ft0, ft3);
 
 		// PMAをやり直す rgb *= a
 		multiply(ft0.xyz, ft0.xyz, ft0.www);
