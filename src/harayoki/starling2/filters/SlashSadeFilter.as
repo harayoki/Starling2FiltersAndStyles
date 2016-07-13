@@ -4,10 +4,12 @@ package harayoki.starling2.filters {
 	import starling.filters.FragmentFilter;
 	import starling.rendering.FilterEffect;
 
-	public class ScanLineFilter extends FragmentFilter implements IAnimatable
+	public class SlashSadeFilter extends FragmentFilter implements IAnimatable
 	{
-		private var _scale:Number = 1.0;
-		private var _degree:Number = 0.0;
+		public static const LOWER_RIGHT:int = 0;
+		public static const LOWER_LEFT:int = 1;
+
+		private var _direction:int = 0;
 		private var _strength:int = 1;
 		private var _offset:Number = 0.0;
 		private var _color:uint = 0;
@@ -15,12 +17,10 @@ package harayoki.starling2.filters {
 
 		public var timeScale:Number = 1.0;
 
-		public function ScanLineFilter(
-			scale:Number=2.0, degree:Number=0.0, strength:int=1, color:uint=0x000000, alpha:Number=1.0):void
+		public function SlashSadeFilter(
+			direction:int=SlashSadeFilter.LOWER_RIGHT, strength:int=4, color:uint=0x000000, alpha:Number=1.0):void
 		{
-			_scale = scale < 1.0 ? 1.0 : scale;
-			_degree = degree % 360;
-			slashShadedEffect.updateMatrix(_degree, _scale);
+			_direction = direction == LOWER_RIGHT ? LOWER_RIGHT : LOWER_LEFT;
 			_strength = slashShadedEffect.strength = strength;
 			_color = color;
 			_updateColor();
@@ -33,12 +33,12 @@ package harayoki.starling2.filters {
 
 		override protected function createEffect():FilterEffect
 		{
-			return new ScanLineEffect();
+			return new SlashShadedEffect();
 		}
 
-		private function get slashShadedEffect():ScanLineEffect
+		private function get slashShadedEffect():SlashShadedEffect
 		{
-			return effect as ScanLineEffect;
+			return effect as SlashShadedEffect;
 		}
 
 		public function get color():uint { return _color; }
@@ -70,34 +70,22 @@ package harayoki.starling2.filters {
 			}
 		}
 
-		public function get scale():Number { return _scale; }
-		public function set scale(value:Number):void
-		{
-			value = value < 1.0 ? 1.0 : value;
-			if(_scale != value) {
-				_scale = value;
-				slashShadedEffect.updateMatrix(_degree, _scale);
-				setRequiresRedraw();
-			}
-		}
-
-		public function get degree():Number { return _degree; }
-		public function set degree(value:Number):void
-		{
-			value = value % 360;
-			if(_degree != value) {
-				_degree = value;
-				slashShadedEffect.updateMatrix(_degree, _scale);
-				setRequiresRedraw();
-			}
-		}
-
 		public function get offset():Number { return _offset; }
 		public function set offset(value:Number):void
 		{
 			if(_offset != value) {
 				_offset = value;
 				slashShadedEffect.offset = _offset;
+				setRequiresRedraw();
+			}
+		}
+
+		public function get direction():int { return _direction; }
+		public function set direction(value:int):void
+		{
+			if(_direction != value) {
+				_direction = value;
+				slashShadedEffect.direction = _direction;
 				setRequiresRedraw();
 			}
 		}
@@ -116,18 +104,6 @@ package harayoki.starling2.filters {
 			}
 		}
 
-		// アスペクト比設定 ->
-		//private var _aspect:Number = 1.0;
-		//public function get aspect():Number { return _aspect; }
-		//public function set aspect(value:Number):void
-		//{
-		//	if(_aspect != value) {
-		//		_aspect = value;
-		//		slashShadedEffect.aspect = _aspect;
-		//		setRequiresRedraw();
-		//	}
-		//}
-
 	}
 }
 
@@ -144,19 +120,19 @@ import harayoki.stage3d.agal.registers.AGALRegisterFragmentTemporary;
 import starling.rendering.FilterEffect;
 import starling.rendering.Program;
 
-internal class ScanLineEffect extends FilterEffect
+internal class SlashShadedEffect extends FilterEffect
 {
 	private var _color:Vector.<Number>;
-	private var _vars:Vector.<Number>;
-	private var _mat:Matrix3D;
+	private var _params:Vector.<Number>;
+	private var _nums:Vector.<Number>;
 
-	public function ScanLineEffect()
+	public function SlashShadedEffect()
 	{
 		_color = new Vector.<Number>(4, true);
-		_mat = new Matrix3D();
-		_vars = new <Number>[0, 1, 1, 0];
-		_vars.fixed = true;
-		updateMatrix(0, 1);
+		_params = new <Number>[0, 1, 1, 0];
+		_params.fixed = true;
+		_nums = new <Number>[0, 1, 2, 3];
+		_nums.fixed = true;
 	}
 
 	override protected function createProgram():Program
@@ -182,8 +158,8 @@ internal class ScanLineEffect extends FilterEffect
 	override protected function beforeDraw(context:Context3D):void
 	{
 		context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, _color);
-		context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, _vars );
-		context.setProgramConstantsFromMatrix(Context3DProgramType.FRAGMENT, 2, _mat);
+		context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, _params );
+		context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, _nums );
 		super.beforeDraw(context);
 	}
 
@@ -204,26 +180,22 @@ internal class ScanLineEffect extends FilterEffect
 	}
 
 	public function set strength(value:Number):void {
-		// -1 と 1 は効果がないので値を大きくする
-		if (value < 0) {
-			value--;
-		} else if (value > 0) {
-			value++
-		}
-		_vars[1] = value;
+		//// -1 と 1 は効果がないので値を大きくする
+		//if (value < 0) {
+		//	value--;
+		//} else if (value > 0) {
+		//	value++
+		//}
+		_params[1] = value;
 
-		//描画エリアを反転しない場合1 する場合0
-		_vars[2] = value >= 0 ? 1 : 0;
+	}
+
+	public function set direction(value:int):void {
+		_params[2] = value <= 0 ? 0 : 1;
 	}
 
 	public function set offset(value:Number):void {
-		_vars[3] = value;
-	}
-
-	public function updateMatrix(degree:Number, scale:Number):void {
-		_mat.identity();
-		_mat.appendRotation(degree, Vector3D.Z_AXIS);
-		_mat.appendScale(1/ scale, 1/ scale, 1.0);
+		_params[3] = value;
 	}
 
 }
@@ -244,24 +216,27 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		// tex ft0, v0, fs0 <2d, ****>
 
 		var FILL_COLOR:AGALRegisterConstant  = fc0;
-		var MATRIX:AGALRegisterConstant     = fc2;
 
-		move(ft7, fc1); // 定数同士の演算エラーになるのをさけるためftに取り出す (お決まりパターン)
+		move(ft6, fc1); // 定数同士の演算エラーになるのをさけるためftに取り出す (お決まりパターン)
+		move(ft7, fc2); // 定数同士の演算エラーになるのをさけるためftに取り出す (お決まりパターン)
 
+		// フィルターパラメータ
+		var STRENGTH:AGALRegister = ft6.y;
+		var STRENGTH_xyzw:AGALRegister = ft6.yyyy;
+		var DIRECTION:AGALRegister = ft6.z;
+		var OFFSET:AGALRegister = ft6.w;
+
+		// 基本演算用
 		var ZERO:AGALRegister = ft7.x;
-		var STRENGTH:AGALRegister = ft7.y;
-		var STRENGTH_xyzw:AGALRegister = ft7.yyyy;
-		var NOT_REVERSE:AGALRegister = ft7.z;
-		var OFFSET:AGALRegister = ft7.w;
+		var ONE:AGALRegister = ft7.y;
+		var TWO:AGALRegister = ft7.z;
+		var THREE:AGALRegister = ft7.w;
 
 		// PMA(premultiplied alpha)演算されているのを元の値に戻す  rgb /= a (お決まりパターン)
 		divide(ft0.xyz, ft0.xyz, ft0.www);
 
 		// 座標値取得
 		move(ft1, v1);
-
-		// 拡大回転
-		multiplyMatrix3x3(ft1.xyz, ft1.xyz, MATRIX);
 
 		// オフセット移動 (MATRIXにはいれていない)
 		add(ft1.y, ft1.y, OFFSET);
@@ -270,20 +245,19 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		fractional(ft2, ft1);
 		subtract(ft1, ft1, ft2);
 
-		// ON / OFF 判定
-		divide(ft2, ft1, STRENGTH_xyzw);
-		fractional(ft2, ft2);
-		setIfNotEqual(ft2.z, ft2.y, ZERO); // ON/OFFフラグ
+		// STRENGTHで割った余りを求める
+		divide(ft2, ft1, STRENGTH_xyzw); // ex) 8.0 / 3.0 = 2.6666
+		fractional(ft3, ft2); // ex) 2.6666 -> 0.6666
+		subtract(ft2, ft2, ft3); // ex) 2.6666 - 0.6666 = 2.0
+		multiply(ft2, ft2, STRENGTH_xyzw); // ex) 2.0 * 3.0 = 6.0;
+		subtract(ft2, ft1, ft2); // ex) 8.0 - 6.0 = 2.0
 
-		// 強さ0の時はOFFフラグをなくす
-		setIfEqual(ft2.x, STRENGTH, ZERO); // 強さ0か？
-		add(ft2.z, ft2.z, ft2.x);// 強さ0の場合 ON/OFFフラグが1か2に
-		saturate(ft2.z, ft2.z); // 2を1に変換
+		// 描画フラグ
+		add(ft2.z, ft2.x, ft2.y); // ex) z = (x % N) + (y % N)
+		subtract(ft2.w, STRENGTH, ONE); // ex) str - 1.0
+		setIfEqual(ft2.z, ft2.z, ft2.w);
 
-		// 描画エリア反転処理 条件により反転 (お決まりパターン)
-		setIfEqual(ft2.z, ft2.z, NOT_REVERSE);
-
-		// ON/OFFフラグ反転処理  (お決まりパターン)
+		// 描画フラグ反転処理  (お決まりパターン)
 		setIfEqual(ft2.w, ft2.z, ZERO);
 
 		// ONならテクスチャカラーをそのまま使う、OFFならいったん黒になる 透明度は後の計算のため、そのままキープ
@@ -304,3 +278,6 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 	}
 
 }
+/*
+ (x%N)+(y%N)==N-1; || x==y
+ */
