@@ -181,12 +181,12 @@ internal class SlashShadedEffect extends FilterEffect
 	}
 
 	public function set strength(value:Number):void {
-		//// -1 と 1 は効果がないので値を大きくする
-		//if (value < 0) {
-		//	value--;
-		//} else if (value > 0) {
-		//	value++
-		//}
+		// -1 と 1 は効果がないので値を大きくする
+		if (value <= 0) {
+			value = 0;
+		} else if (value > 0) {
+			value++
+		}
 		_params[1] = value;
 
 	}
@@ -258,7 +258,7 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		// 描画フラグ
 		add(ft2.z, ft2.x, ft2.y); // ex) z = (x % N) + (y % N)
 		subtract(ft2.w, STRENGTH, ONE); // ex) str - 1.0
-		setIfEqual(ft2.z, ft2.z, ft2.w);
+		setIfNotEqual(ft2.z, ft2.z, ft2.w);
 
 		// 描画フラグ反転処理  (お決まりパターン)
 		setIfEqual(ft2.w, ft2.z, ZERO);
