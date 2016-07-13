@@ -6,11 +6,11 @@ package harayoki.starling2.filters {
 
 	public class SlashShadedFilter extends FragmentFilter implements IAnimatable
 	{
-		public static const LOWER_RIGHT:int = 0;
-		public static const LOWER_LEFT:int = 1;
+		public static const TYPE_SLASH:int = 0;
+		public static const TYPE_BACK_SLASH:int = 1;
 
-		private var _direction:int = 0;
-		private var _strength:int = 1;
+		private var _type:int = 0;
+		private var _distance:int = 1;
 		private var _offset:Number = 0.0;
 		private var _color:uint = 0;
 		private var _alpha:Number = 1.0;
@@ -18,10 +18,10 @@ package harayoki.starling2.filters {
 		public var timeScale:Number = 1.0;
 
 		public function SlashShadedFilter(
-			direction:int=SlashShadedFilter.LOWER_RIGHT, strength:int=4, color:uint=0x000000, alpha:Number=1.0):void
+			distance:int=4, color:uint=0x000000, alpha:Number=1.0, type:int=SlashShadedFilter.TYPE_SLASH):void
 		{
-			_direction = direction == LOWER_RIGHT ? LOWER_RIGHT : LOWER_LEFT;
-			_strength = slashShadedEffect.strength = strength;
+			_type = type == TYPE_SLASH ? TYPE_SLASH : TYPE_BACK_SLASH;
+			_distance = slashShadedEffect.distance = distance;
 			_color = color;
 			_updateColor();
 			_alpha = slashShadedEffect.alphaShade = alpha < 0.0 ? 0.0 : alpha;
@@ -80,26 +80,22 @@ package harayoki.starling2.filters {
 			}
 		}
 
-		public function get direction():int { return _direction; }
-		public function set direction(value:int):void
+		public function get type():int { return _type; }
+		public function set type(value:int):void
 		{
-			if(_direction != value) {
-				_direction = value;
-				slashShadedEffect.direction = _direction;
+			if(_type != value) {
+				_type = value;
+				slashShadedEffect.type = _type;
 				setRequiresRedraw();
 			}
 		}
 
-		public function get strength():Number { return _strength; }
-		public function set strength(value:Number):void
+		public function get distance():Number { return _distance; }
+		public function set distance(value:Number):void
 		{
-			//５より大きいと表示が荒れる
-			if(Math.abs(value) > 5) {
-				value = value < 0 ? -5 : 5;
-			}
-			if(_strength != value) {
-				_strength = value;
-				slashShadedEffect.strength = _strength;
+			if(_distance != value) {
+				_distance = value;
+				slashShadedEffect.distance = _distance;
 				setRequiresRedraw();
 			}
 		}
@@ -180,18 +176,17 @@ internal class SlashShadedEffect extends FilterEffect
 		_color[3] = value;
 	}
 
-	public function set strength(value:Number):void {
+	public function set distance(value:Number):void {
 		// -1 と 1 は効果がないので値を大きくする
-		if (value <= 0) {
+		value ++;
+		if (value <= 1) {
 			value = 0;
-		} else if (value > 0) {
-			value++
 		}
 		_params[1] = value;
 
 	}
 
-	public function set direction(value:int):void {
+	public function set type(value:int):void {
 		_params[2] = value <= 0 ? 0 : 1;
 	}
 
