@@ -20,7 +20,7 @@ package harayoki.starling2.filters {
 		public function SlashShadedFilter(
 			distance:int=4, color:uint=0x000000, alpha:Number=1.0, type:int=SlashShadedFilter.TYPE_SLASH):void
 		{
-			_type = type == TYPE_SLASH ? TYPE_SLASH : TYPE_BACK_SLASH;
+			_type = slashShadedEffect.type = (type == TYPE_SLASH) ? TYPE_SLASH : TYPE_BACK_SLASH;
 			_distance = slashShadedEffect.distance = distance;
 			_color = color;
 			_updateColor();
@@ -187,7 +187,7 @@ internal class SlashShadedEffect extends FilterEffect
 	}
 
 	public function set type(value:int):void {
-		_params[2] = value <= 0 ? 0 : 1;
+		_params[2] = (value == 0) ? 0 : 1;
 	}
 
 	public function set offset(value:Number):void {
@@ -220,7 +220,7 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		var PARAMS:AGALRegister = ft6;
 		var STRENGTH:AGALRegister = PARAMS.y;
 		var STRENGTH_xyzw:AGALRegister = PARAMS.yyyy;
-		var DIRECTION:AGALRegister = PARAMS.z;
+		var TYPE:AGALRegister = PARAMS.z;
 		var OFFSET:AGALRegister = PARAMS.w;
 
 		// 基本演算用
@@ -249,6 +249,11 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		subtract(ft2, ft2, ft3); // ex) 2.6666 - 0.6666 = 2.0
 		multiply(ft2, ft2, STRENGTH_xyzw); // ex) 2.0 * 3.0 = 6.0;
 		subtract(ft2, ft1, ft2); // ex) 8.0 - 6.0 = 2.0
+
+		// 左右反転
+		multiply(ft3.x, TYPE, STRENGTH); // 0 or str
+		subtract(ft2.x, ft2.x, ft3.x); // ex) 2 - 3 = -1;
+		absolute(ft2.x, ft2.x); // ex) => 1;
 
 		// 描画フラグ
 		add(ft2.z, ft2.x, ft2.y); // ex) z = (x % N) + (y % N)
