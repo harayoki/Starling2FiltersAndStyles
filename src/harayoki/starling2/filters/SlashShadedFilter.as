@@ -4,7 +4,7 @@ package harayoki.starling2.filters {
 	import starling.filters.FragmentFilter;
 	import starling.rendering.FilterEffect;
 
-	public class SlashSadeFilter extends FragmentFilter implements IAnimatable
+	public class SlashShadedFilter extends FragmentFilter implements IAnimatable
 	{
 		public static const LOWER_RIGHT:int = 0;
 		public static const LOWER_LEFT:int = 1;
@@ -17,8 +17,8 @@ package harayoki.starling2.filters {
 
 		public var timeScale:Number = 1.0;
 
-		public function SlashSadeFilter(
-			direction:int=SlashSadeFilter.LOWER_RIGHT, strength:int=4, color:uint=0x000000, alpha:Number=1.0):void
+		public function SlashShadedFilter(
+			direction:int=SlashShadedFilter.LOWER_RIGHT, strength:int=4, color:uint=0x000000, alpha:Number=1.0):void
 		{
 			_direction = direction == LOWER_RIGHT ? LOWER_RIGHT : LOWER_LEFT;
 			_strength = slashShadedEffect.strength = strength;
@@ -113,6 +113,7 @@ import flash.geom.Matrix3D;
 import flash.geom.Vector3D;
 
 import harayoki.stage3d.agal.AGAL1CodePrinterForBaselineExtendedProfile;
+import harayoki.stage3d.agal.i.IAGALRegister;
 import harayoki.stage3d.agal.registers.AGALRegister;
 import harayoki.stage3d.agal.registers.AGALRegisterConstant;
 import harayoki.stage3d.agal.registers.AGALRegisterFragmentTemporary;
@@ -221,16 +222,18 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		move(ft7, fc2); // 定数同士の演算エラーになるのをさけるためftに取り出す (お決まりパターン)
 
 		// フィルターパラメータ
-		var STRENGTH:AGALRegister = ft6.y;
-		var STRENGTH_xyzw:AGALRegister = ft6.yyyy;
-		var DIRECTION:AGALRegister = ft6.z;
-		var OFFSET:AGALRegister = ft6.w;
+		var PARAMS:AGALRegister = ft6;
+		var STRENGTH:AGALRegister = PARAMS.y;
+		var STRENGTH_xyzw:AGALRegister = PARAMS.yyyy;
+		var DIRECTION:AGALRegister = PARAMS.z;
+		var OFFSET:AGALRegister = PARAMS.w;
 
 		// 基本演算用
-		var ZERO:AGALRegister = ft7.x;
-		var ONE:AGALRegister = ft7.y;
-		var TWO:AGALRegister = ft7.z;
-		var THREE:AGALRegister = ft7.w;
+		var NUMS:AGALRegister = ft7;
+		var ZERO:AGALRegister = NUMS.x;
+		var ONE:AGALRegister = NUMS.y;
+		var TWO:AGALRegister = NUMS.z;
+		var THREE:AGALRegister = NUMS.w;
 
 		// PMA(premultiplied alpha)演算されているのを元の値に戻す  rgb /= a (お決まりパターン)
 		divide(ft0.xyz, ft0.xyz, ft0.www);
