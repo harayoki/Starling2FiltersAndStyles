@@ -188,10 +188,11 @@ internal class SlashShadedEffect extends FilterEffect
 
 	public function set type(value:int):void {
 		_params[2] = (value == 0) ? 0 : 1;
+		offset = _params[3];
 	}
 
 	public function set offset(value:Number):void {
-		_params[3] = value;
+		_params[3] = _params[2] == 0 ? value : -value;
 	}
 
 }
@@ -218,8 +219,8 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 
 		// フィルターパラメータ
 		var PARAMS:AGALRegister = ft6;
-		var STRENGTH:AGALRegister = PARAMS.y;
-		var STRENGTH_xyzw:AGALRegister = PARAMS.yyyy;
+		var DISTANCE:AGALRegister = PARAMS.y;
+		var DISTANCE_xyzw:AGALRegister = PARAMS.yyyy;
 		var TYPE:AGALRegister = PARAMS.z;
 		var OFFSET:AGALRegister = PARAMS.w;
 
@@ -237,27 +238,27 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		move(ft1, v1);
 
 		// オフセット移動 (MATRIXにはいれていない)
-		add(ft1.y, ft1.y, OFFSET);
+		add(ft1.x, ft1.x, OFFSET);
 
 		// 少数部分破棄 (お決まりパターン)
 		fractional(ft2, ft1);
 		subtract(ft1, ft1, ft2);
 
 		// STRENGTHで割った余りを求める
-		divide(ft2, ft1, STRENGTH_xyzw); // ex) 8.0 / 3.0 = 2.6666
+		divide(ft2, ft1, DISTANCE_xyzw); // ex) 8.0 / 3.0 = 2.6666
 		fractional(ft3, ft2); // ex) 2.6666 -> 0.6666
 		subtract(ft2, ft2, ft3); // ex) 2.6666 - 0.6666 = 2.0
-		multiply(ft2, ft2, STRENGTH_xyzw); // ex) 2.0 * 3.0 = 6.0;
+		multiply(ft2, ft2, DISTANCE_xyzw); // ex) 2.0 * 3.0 = 6.0;
 		subtract(ft2, ft1, ft2); // ex) 8.0 - 6.0 = 2.0
 
-		// 左右反転
-		multiply(ft3.x, TYPE, STRENGTH); // 0 or str
+		// 指示があれば左右反転
+		multiply(ft3.x, TYPE, DISTANCE); // 0 or str
 		subtract(ft2.x, ft2.x, ft3.x); // ex) 2 - 3 = -1;
 		absolute(ft2.x, ft2.x); // ex) => 1;
 
 		// 描画フラグ
 		add(ft2.z, ft2.x, ft2.y); // ex) z = (x % N) + (y % N)
-		subtract(ft2.w, STRENGTH, ONE); // ex) str - 1.0
+		subtract(ft2.w, DISTANCE, ONE); // ex) str - 1.0
 		setIfNotEqual(ft2.z, ft2.z, ft2.w);
 
 		// 描画フラグ反転処理  (お決まりパターン)
