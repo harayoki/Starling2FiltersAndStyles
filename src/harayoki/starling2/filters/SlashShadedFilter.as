@@ -252,7 +252,8 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		subtract(ft2, ft1, ft2); // ex) 8.0 - 6.0 = 2.0
 
 		// 指示があれば左右反転
-		multiply(ft3.x, TYPE, DISTANCE); // 0 or str
+		subtract(ft3.y, DISTANCE, ONE); // 計算を合わすため、1ずらす
+		multiply(ft3.x, TYPE, ft3.y); // 0 or distance
 		subtract(ft2.x, ft2.x, ft3.x); // ex) 2 - 3 = -1;
 		absolute(ft2.x, ft2.x); // ex) => 1;
 
