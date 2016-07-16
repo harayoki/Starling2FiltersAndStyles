@@ -8,7 +8,7 @@ package harayoki.starling2.filters {
 	{
 		private var _scale:Number = 1.0;
 		private var _degree:Number = 0.0;
-		private var _strength:int = 1;
+		private var _distance:int = 1;
 		private var _offset:Number = 0.0;
 		private var _color:uint = 0;
 		private var _alpha:Number = 1.0;
@@ -16,12 +16,12 @@ package harayoki.starling2.filters {
 		public var timeScale:Number = 1.0;
 
 		public function ScanLineFilter(
-			scale:Number=2.0, degree:Number=0.0, strength:int=1, color:uint=0x000000, alpha:Number=1.0):void
+			scale:Number=2.0, degree:Number=0.0, distance:int=1, color:uint=0x000000, alpha:Number=1.0):void
 		{
 			_scale = scale < 1.0 ? 1.0 : scale;
 			_degree = degree % 360;
 			slashShadedEffect.updateMatrix(_degree, _scale);
-			_strength = slashShadedEffect.strength = strength;
+			_distance = slashShadedEffect.distance = distance;
 			_color = color;
 			_updateColor();
 			_alpha = slashShadedEffect.alphaShade = alpha < 0.0 ? 0.0 : alpha;
@@ -102,16 +102,16 @@ package harayoki.starling2.filters {
 			}
 		}
 
-		public function get strength():Number { return _strength; }
-		public function set strength(value:Number):void
+		public function get distance():Number { return _distance; }
+		public function set distance(value:Number):void
 		{
 			//５より大きいと表示が荒れる
 			if(Math.abs(value) > 5) {
 				value = value < 0 ? -5 : 5;
 			}
-			if(_strength != value) {
-				_strength = value;
-				slashShadedEffect.strength = _strength;
+			if(_distance != value) {
+				_distance = value;
+				slashShadedEffect.distance = _distance;
 				setRequiresRedraw();
 			}
 		}
@@ -203,7 +203,7 @@ internal class ScanLineEffect extends FilterEffect
 		_color[3] = value;
 	}
 
-	public function set strength(value:Number):void {
+	public function set distance(value:Number):void {
 		// -1 と 1 は効果がないので値を大きくする
 		if (value < 0) {
 			value--;
@@ -249,8 +249,8 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		move(ft7, fc1); // 定数同士の演算エラーになるのをさけるためftに取り出す (お決まりパターン)
 
 		var ZERO:AGALRegister = ft7.x;
-		var STRENGTH:AGALRegister = ft7.y;
-		var STRENGTH_xyzw:AGALRegister = ft7.yyyy;
+		var DISTANCE:AGALRegister = ft7.y;
+		var DISTANCE_xyzw:AGALRegister = ft7.yyyy;
 		var NOT_REVERSE:AGALRegister = ft7.z;
 		var OFFSET:AGALRegister = ft7.w;
 
@@ -271,12 +271,12 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		subtract(ft1, ft1, ft2);
 
 		// ON / OFF 判定
-		divide(ft2, ft1, STRENGTH_xyzw);
+		divide(ft2, ft1, DISTANCE_xyzw);
 		fractional(ft2, ft2);
 		setIfNotEqual(ft2.z, ft2.y, ZERO); // ON/OFFフラグ
 
 		// 強さ0の時はOFFフラグをなくす
-		setIfEqual(ft2.x, STRENGTH, ZERO); // 強さ0か？
+		setIfEqual(ft2.x, DISTANCE, ZERO); // 強さ0か？
 		add(ft2.z, ft2.z, ft2.x);// 強さ0の場合 ON/OFFフラグが1か2に
 		saturate(ft2.z, ft2.z); // 2を1に変換
 
