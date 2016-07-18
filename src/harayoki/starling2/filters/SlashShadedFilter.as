@@ -148,7 +148,7 @@ internal class SlashShadedEffect extends FilterEffect
 		trace("");
 		trace("________ Fragment Program __________");
 		trace(fragmentShaderPrinter.printWithLineNum());
-
+		
 		return Program.fromSource(vertexProgram, fragmentProgram);
 	}
 
@@ -244,7 +244,7 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 		fractional(ft2, ft1);
 		subtract(ft1, ft1, ft2);
 
-		// STRENGTHで割った余りを求める
+		// DISTANCEで割った余りを求める
 		divide(ft2, ft1, DISTANCE_xyzw); // ex) 8.0 / 3.0 = 2.6666
 		fractional(ft3, ft2); // ex) 2.6666 -> 0.6666
 		subtract(ft2, ft2, ft3); // ex) 2.6666 - 0.6666 = 2.0
@@ -259,7 +259,7 @@ internal class FragmentAGALCodePrinter extends AGAL1CodePrinterForBaselineExtend
 
 		// 描画フラグ
 		add(ft2.z, ft2.x, ft2.y); // ex) z = (x % N) + (y % N)
-		subtract(ft2.w, DISTANCE, ONE); // ex) str - 1.0
+		subtract(ft2.w, DISTANCE, ONE); // ex) distance - 1.0
 		setIfNotEqual(ft2.z, ft2.z, ft2.w);
 
 		// 描画フラグ反転処理  (お決まりパターン)
